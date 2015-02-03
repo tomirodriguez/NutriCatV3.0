@@ -11,6 +11,8 @@ import java.sql.Statement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.eq;
@@ -129,5 +131,13 @@ public class FoodDAOTest extends TestsModel {
         foodDAO.delete(foodDTO);
         verify(dataBaseConnection).commit();
         verify(statement).execute(correctSql);
+    }
+
+    @Test
+    public void test07AFoodDAOCanListTheFoodsStoredInTheDatabase() throws Exception {
+        DataBaseConnection dataBaseConnection = mock(DataBaseConnection.class);
+        FoodDAO foodDAO = new FoodDAO(dataBaseConnection);
+        List<FoodDTO> foods = foodDAO.getObjects();
+
     }
 }

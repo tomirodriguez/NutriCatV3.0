@@ -7,6 +7,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -24,6 +25,8 @@ public abstract class DAO<T> {
         this.tableName = tableName;
         this.connection = connection;
     }
+
+    public abstract List<FoodDTO> getObjects() throws Exception;
 
     public abstract DTO<T> insert(T objectToInsert) throws Exception;
 
@@ -56,7 +59,7 @@ public abstract class DAO<T> {
         return generatedId;
     }
 
-    protected void executeStatement(String sql) throws Exception {
+    protected ResultSet executeStatement(String sql) throws Exception {
         Statement statement= connection.getStatement();
         statement.execute(sql);
         try {
@@ -68,5 +71,7 @@ public abstract class DAO<T> {
         } finally {
             statement.close();
         }
+
+        return statement.getResultSet();
     }
 }

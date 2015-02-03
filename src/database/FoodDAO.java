@@ -3,9 +3,14 @@ package database;
 import model.CustomServing;
 import model.Food;
 import model.Nutrient;
+import model.NutritionalInformation;
 import utilities.Utilities;
 
+import javax.measure.unit.SI;
+import java.sql.ResultSet;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by Usuario on 02/02/15.
@@ -16,6 +21,33 @@ public class FoodDAO extends DAO<Food> {
         super(dataBaseConnection, dataBaseConnection.foodTableName);
 
         connection.createFoodTable();
+    }
+
+    @Override
+    public List<FoodDTO> getObjects() throws Exception {
+        List<FoodDTO> foods = new ArrayList<>();
+        ResultSet resultSet = executeStatement("SELECT * FROM " + tableName);
+            while (resultSet.next()) {
+                int id = resultSet.getInt("ID");
+                String name = resultSet.getString("NAME").replace("''", "'");
+                double servingSize = resultSet.getDouble("SERVING_SIZE");
+
+                Double[] values = new Double[Nutrient.values().length];
+                for (Nutrient nutrient : Nutrient.values()) {
+                    double amount = resultSet.getDouble(nutrient.name());
+                    if (!resultSet.wasNull())
+                        values[nutrient.ordinal()] = amount;
+                }
+
+                Food food = new Food(name, "", new NutritionalInformation(servingSize, values));
+
+                String customServingsString = resultSet.getString("CUSTOM_SERVING_SIZE");
+                if (!resultSet.wasNull())
+                    addCustomServings(food, customServingsString);
+
+                foods.add(new FoodDTO(food, id));
+            }
+        return foods;
     }
 
     @Override
@@ -77,5 +109,15 @@ public class FoodDAO extends DAO<Food> {
             customServingsToString += customServing.getName() + "#" + amount + "~";
         }
         return Utilities.removeLasCharacterFromString(customServingsToString) + "'";
+    }
+
+    private void addCustomServings(Food food, String customServingsString) throws Exception {
+        String[] customServingString = customServingsString.split("~");
+        for(String customServing : customServingString){
+            String[] spplitedCustomServing = customServing.split("#");
+            String name = spplitedCustomServing[0].replace("''", "'");
+            double amount = Double.valueOf(spplitedCustomServing[1]);
+            food.add(new CustomServing(name, amount));
+        }
     }
 }
